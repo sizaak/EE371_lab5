@@ -1,6 +1,6 @@
-module N_fir #(parameter N=16) (reset, CLOCK_50, data_in, data_out);
+ module N_fir #(parameter N=16) (reset, CLOCK_50, data_in, data_out, read, write);
 	
-	input logic reset, CLOCK_50;
+	input logic reset, CLOCK_50, read, write;
 	input logic [23:0] data_in;
 	output logic [23:0] data_out;
 	
@@ -8,33 +8,27 @@ module N_fir #(parameter N=16) (reset, CLOCK_50, data_in, data_out);
 	
 	logic rd, wr, empty, full;
 	logic [23:0] w_data, r_data;
-	//logic [23:0] s1, s2, s3;
+	logic [23:0] accumulator_in, accumulator_out;
 	
 	// Divide input by N
 	assign w_data = data_in / N;
 	
-	assign rd = ~empty;
-	assign wr = ~full;
-	
 	// Store in FIFO
-	fifo #(.DATA_WIDTH(DATA_SIZE), .ADDR_WIDTH(N)) fifo_unit
-   (.clk(CLOCK_50), .reset, .rd, .wr, .w_data, .empty, .full, .r_data);
+	fifo #(.DATA_WIDTH(DATA_SIZE), .ADDR_WIDTH(4)) fifo_unit
+   (.clk(CLOCK_50), .reset, .rd(write), .wr(read), .w_data, .empty, .full, .r_data);
 	
-	// Subtract
-	assign s1 = w_data - r_data;
-	
-	// Add to accumulator
-	assign s2 = s1 + s3;
-	D_FF_24 accumulator (.q(s3), .d(s2), .reset, .clk(CLOCK_50));
-	
-	assign data_out = s2;
-	
-	
+
 	always_ff @(posedge CLOCK_50) begin
-		if(reset) // fill buffer all zeros
-		else
-	
+		if(reset) begin // fill buffer all zeros
+			accumulator_in <= 0;
+			accumulator_out <= 0;
+		end else begin
+			accumulator_out <= accumulator_in;
+			accumulator_in <= accumulator_out + (w_data - r_data);
+		end
 	end
+	
+	assign data_out = accumulator_in;
 	
 endmodule
 
