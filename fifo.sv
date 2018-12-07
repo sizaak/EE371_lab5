@@ -6,9 +6,9 @@ module fifo
    (
     input  logic clk, reset,
     input  logic rd, wr,
-    input  logic [DATA_WIDTH-1:0] w_data,
+    input  logic signed [DATA_WIDTH-1:0] w_data,
     output logic empty, full,
-    output logic [DATA_WIDTH-1:0] r_data
+    output logic signed [DATA_WIDTH-1:0] r_data
    );
 
    //signal declaration
@@ -16,8 +16,7 @@ module fifo
    logic wr_en, full_tmp;
 
    // body
-   // write enabled only when FIFO is not full
-   assign wr_en = wr & ~full_tmp;
+   assign wr_en = wr;
    assign full = full_tmp;
    
    // instantiate fifo control unit
